@@ -55,7 +55,7 @@ function ChangeAcl() {
 	do
 		echo $(sed -n "${count}p" < NetworkAclId.tmp)
 		echo $NetworkAclAssociationId
-		aws ec2 replace-network-acl-association --region ${AZ:0:-1} --association-id $NetworkAclAssociationId --network-acl-id $(sed -n "${count}p" < $2)
+		aws ec2 replace-network-acl-association --region ${AZ%?} --association-id $NetworkAclAssociationId --network-acl-id $(sed -n "${count}p" < $2)
 	    ((count=count+1))
 	done
 }
@@ -64,25 +64,25 @@ if $DISABLE
 then
   echo "Disabling AvailabilityZone"
   # use the subnetId to get the NetworkAclAssociationId to create the new acl association and get the NetworkAclId so can revert the change
-  for SUBNETID in $(aws ec2 describe-subnets --region ${AZ:0:-1}| jq ".Subnets[] | select(.AvailabilityZone==\"$AZ\")"  | jq -r '.SubnetId')
+  for SUBNETID in $(aws ec2 describe-subnets --region ${AZ%?}| jq ".Subnets[] | select(.AvailabilityZone==\"$AZ\")"  | jq -r '.SubnetId')
   do
-    aws ec2 describe-network-acls --region ${AZ:0:-1}| jq -r ".[] | .[].Associations[] | select(.SubnetId==\"$SUBNETID\")" | jq -r '.NetworkAclAssociationId' >> NetworkAclAssociationId.tmp
-    aws ec2 describe-network-acls --region ${AZ:0:-1}| jq -r ".[] | .[].Associations[] | select(.SubnetId==\"$SUBNETID\")" | jq -r '.NetworkAclId' >> NetworkAclId-restore.tmp
+    aws ec2 describe-network-acls --region ${AZ%?}| jq -r ".[] | .[].Associations[] | select(.SubnetId==\"$SUBNETID\")" | jq -r '.NetworkAclAssociationId' >> NetworkAclAssociationId.tmp
+    aws ec2 describe-network-acls --region ${AZ%?}| jq -r ".[] | .[].Associations[] | select(.SubnetId==\"$SUBNETID\")" | jq -r '.NetworkAclId' >> NetworkAclId-restore.tmp
   done
 
   # create two the dummy ACL and create a file containing the NetworkAclId for the dummy ACL
-  for VPCID in $(aws ec2 describe-subnets --region ${AZ:0:-1} | jq -r ".Subnets[] | select(.AvailabilityZone==\"$AZ\")"  | jq -r '.VpcId')
+  for VPCID in $(aws ec2 describe-subnets --region ${AZ%?} | jq -r ".Subnets[] | select(.AvailabilityZone==\"$AZ\")"  | jq -r '.VpcId')
   do
-    aws ec2 create-network-acl --vpc-id $VPCID --region ${AZ:0:-1} | jq -r '.NetworkAcl.NetworkAclId' >> NetworkAclId.tmp
+    aws ec2 create-network-acl --vpc-id $VPCID --region ${AZ%?} | jq -r '.NetworkAcl.NetworkAclId' >> NetworkAclId.tmp
   done
 
   # create new disable ACL association
   ChangeAcl NetworkAclAssociationId.tmp NetworkAclId.tmp
 else
   echo "Re-enable AvailabilityZone"
-  for SUBNETID in $(aws ec2 describe-subnets --region ${AZ:0:-1} | jq ".Subnets[] | select(.AvailabilityZone==\"$AZ\")" | jq -r '.SubnetId')
+  for SUBNETID in $(aws ec2 describe-subnets --region ${AZ%?} | jq ".Subnets[] | select(.AvailabilityZone==\"$AZ\")" | jq -r '.SubnetId')
   do
-    aws ec2 describe-network-acls --region ${AZ:0:-1} | jq -r ".[] | .[].Associations[] | select(.SubnetId==\"$SUBNETID\")" | jq -r '.NetworkAclAssociationId' >> NetworkAclAssociationId-restore.tmp
+    aws ec2 describe-network-acls --region ${AZ%?} | jq -r ".[] | .[].Associations[] | select(.SubnetId==\"$SUBNETID\")" | jq -r '.NetworkAclAssociationId' >> NetworkAclAssociationId-restore.tmp
   done
 
   # Restore the subnets to the original ACL's
@@ -92,7 +92,7 @@ else
   # delete the dummy ACL's
   cat NetworkAclId.tmp | while read deleteNetworkAclId
   do
-    aws ec2 delete-network-acl --network-acl-id $deleteNetworkAclId --region ${AZ:0:-1}
+    aws ec2 delete-network-acl --network-acl-id $deleteNetworkAclId --region ${AZ%?}
   done
 
   # remove the tmp files
