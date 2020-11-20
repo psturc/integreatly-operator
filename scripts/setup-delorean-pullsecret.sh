@@ -7,7 +7,7 @@ DELOREAN_PULLSECRET="$(pwd)/integreatly-delorean-auth.json"
 STAGED_PULLSECRET="$(pwd)/staged-pullsecret"
 COMBINED_PULLSECRET="$(pwd)/combined-pullsecret"
 TEMP_SERVICEACCOUNT_NAME="rhmi-operator"
-NS_PREFIX="redhat-rhmi-"
+NS_PREFIX="redhat-rhoam-"
 OPERATOR_NAMESPACE="${NS_PREFIX}operator"
 
 if [ ! -z "${DELOREAN_DOCKER_CONFIG}" ]; then
