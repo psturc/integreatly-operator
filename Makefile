@@ -366,9 +366,9 @@ cluster/cleanup:
 cluster/cleanup/serviceaccount:
 	@-oc delete serviceaccount ${TEMP_SERVICEACCOUNT_NAME} -n ${NAMESPACE}
 	@-oc delete role ${TEMP_SERVICEACCOUNT_NAME} -n ${NAMESPACE}
-	@-oc delete rolebinding ${TEMP_SERVICEACCOUNT_NAME} -n ${NAMESPACE}
+	@-oc delete rolebinding rhoam-operator -n ${NAMESPACE}
 	@-oc delete clusterrole ${TEMP_SERVICEACCOUNT_NAME}
-	@-oc delete clusterrolebinding ${TEMP_SERVICEACCOUNT_NAME}
+	@-oc delete clusterrolebinding rhoam-operator
 
 .PHONY: cluster/cleanup/olm
 cluster/cleanup/olm: cluster/cleanup

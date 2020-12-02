@@ -7,7 +7,8 @@ DELOREAN_PULLSECRET="$(pwd)/integreatly-delorean-auth.json"
 STAGED_PULLSECRET="$(pwd)/staged-pullsecret"
 COMBINED_PULLSECRET="$(pwd)/combined-pullsecret"
 TEMP_SERVICEACCOUNT_NAME="rhmi-operator"
-OPERATOR_NAMESPACE="redhat-rhmi-operator"
+NS_PREFIX="redhat-rhoam-"
+OPERATOR_NAMESPACE="${NS_PREFIX}operator"
 
 if [ ! -z "${DELOREAN_DOCKER_CONFIG}" ]; then
     echo -e $DELOREAN_DOCKER_CONFIG > $DELOREAN_PULLSECRET
@@ -38,12 +39,16 @@ combine_and_deploy_cluster_secret() {
 }
 
 setup_ns_and_local_secret() {
-  oc new-project redhat-rhmi-3scale --as system:serviceaccount:${OPERATOR_NAMESPACE}:${TEMP_SERVICEACCOUNT_NAME}
-  oc new-project redhat-rhmi-fuse --as system:serviceaccount:${OPERATOR_NAMESPACE}:${TEMP_SERVICEACCOUNT_NAME}
-  oc create secret docker-registry --docker-server=quay.io --docker-username="${DELOREAN_USERNAME}" --docker-password="${DELOREAN_PASSWORD}" regsecret -n redhat-rhmi-3scale --as system:serviceaccount:${OPERATOR_NAMESPACE}:${TEMP_SERVICEACCOUNT_NAME}
-  oc create secret docker-registry --docker-server=quay.io --docker-username="${DELOREAN_USERNAME}" --docker-password="${DELOREAN_PASSWORD}" regsecret -n redhat-rhmi-fuse --as system:serviceaccount:${OPERATOR_NAMESPACE}:${TEMP_SERVICEACCOUNT_NAME}
-  oc secrets link default regsecret --for=pull -n redhat-rhmi-3scale --as system:serviceaccount:${OPERATOR_NAMESPACE}:${TEMP_SERVICEACCOUNT_NAME}
-  oc secrets link default regsecret --for=pull -n redhat-rhmi-fuse --as system:serviceaccount:${OPERATOR_NAMESPACE}:${TEMP_SERVICEACCOUNT_NAME}
+  oc new-project ${NS_PREFIX}3scale --as system:serviceaccount:${OPERATOR_NAMESPACE}:${TEMP_SERVICEACCOUNT_NAME}
+  oc create secret docker-registry --docker-server=quay.io --docker-username="${DELOREAN_USERNAME}" --docker-password="${DELOREAN_PASSWORD}" regsecret -n ${NS_PREFIX}3scale --as system:serviceaccount:${OPERATOR_NAMESPACE}:${TEMP_SERVICEACCOUNT_NAME}
+  oc secrets link default regsecret --for=pull -n ${NS_PREFIX}3scale --as system:serviceaccount:${OPERATOR_NAMESPACE}:${TEMP_SERVICEACCOUNT_NAME}
+
+  if [[ $NS_PREFIX = "redhat-rhmi-" ]]; then
+    oc new-project ${NS_PREFIX}fuse --as system:serviceaccount:${OPERATOR_NAMESPACE}:${TEMP_SERVICEACCOUNT_NAME}
+    oc create secret docker-registry --docker-server=quay.io --docker-username="${DELOREAN_USERNAME}" --docker-password="${DELOREAN_PASSWORD}" regsecret -n ${NS_PREFIX}fuse --as system:serviceaccount:${OPERATOR_NAMESPACE}:${TEMP_SERVICEACCOUNT_NAME}
+    oc secrets link default regsecret --for=pull -n ${NS_PREFIX}fuse --as system:serviceaccount:${OPERATOR_NAMESPACE}:${TEMP_SERVICEACCOUNT_NAME}
+  fi
+
   oc project ${OPERATOR_NAMESPACE}
 }
 
