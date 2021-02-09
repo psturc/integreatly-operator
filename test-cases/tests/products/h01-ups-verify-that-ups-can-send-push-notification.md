@@ -8,7 +8,7 @@ products:
     environments:
       - osd-post-upgrade
     targets:
-      - 2.8.0
+      - 2.9.0
 ---
 
 # H01 - UPS: Verify that UPS can send push notification

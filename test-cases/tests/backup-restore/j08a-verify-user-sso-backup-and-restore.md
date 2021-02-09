@@ -6,7 +6,6 @@ products:
     environments:
       - osd-post-upgrade
     targets:
-      - 2.8.0
       - 2.7.1
 estimate: 1h
 tags:

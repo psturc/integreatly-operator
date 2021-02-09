@@ -5,6 +5,7 @@ products:
       - osd-post-upgrade
     targets:
       - 2.5.0
+      - 2.8.0
 ---
 
 # C11A - Verify RHMI install alert is firing

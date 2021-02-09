@@ -7,7 +7,6 @@ products:
       - osd-post-upgrade
     targets:
       - 2.4.0
-      - 2.8.0
 estimate: 2h
 tags:
   - destructive
