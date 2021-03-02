@@ -2,7 +2,9 @@ package functional
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"os"
+	"time"
 
 	"github.com/integr8ly/integreatly-operator/test/common"
 	. "github.com/onsi/ginkgo"
@@ -18,6 +20,24 @@ var _ = Describe("integreatly", func() {
 	BeforeEach(func() {
 		restConfig = cfg
 		t = GinkgoT()
+	})
+
+	JustBeforeEach(func() {
+		testingContext, _ := common.NewTestingContext(restConfig)
+		err = wait.Poll(time.Second*1, time.Minute*10, func() (done bool, err error) {
+			rhmi, _ := common.GetRHMI(testingContext.Client, true)
+			if rhmi.Status.Stage == "completed" {
+				return true, nil
+			}
+			t.Logf("RHMI CR status.stage is: \"%s\". Waiting for: \"complete\"", rhmi.Status.Stage)
+			time.Sleep(time.Second * 10)
+			return false, nil
+
+		})
+		if err != nil {
+			t.Error("Error waiting for RHMI CR status.stage to be \"complete\"")
+		}
+
 	})
 
 	RunTests := func() {
