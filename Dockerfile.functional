@@ -14,7 +14,7 @@ COPY test ./test
 COPY Makefile ./
 COPY manifests/ ./manifests
 
-RUN make test/compile/functional
+COPY integreatly-operator-test-harness.test ./integreatly-operator-test-harness.test
 
 FROM registry.access.redhat.com/ubi7/ubi-minimal:latest
 

@@ -26,7 +26,7 @@ var _ = Describe("integreatly", func() {
 		testingContext, _ := common.NewTestingContext(restConfig)
 		err = wait.Poll(time.Second*1, time.Minute*10, func() (done bool, err error) {
 			rhmi, _ := common.GetRHMI(testingContext.Client, true)
-			if rhmi.Status.Stage == "completed" {
+			if rhmi.Status.Stage == "complete" {
 				return true, nil
 			}
 			t.Logf("RHMI CR status.stage is: \"%s\". Waiting for: \"complete\"", rhmi.Status.Stage)
