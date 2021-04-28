@@ -1100,15 +1100,25 @@ func (r *RHMIReconciler) processQuota(installation *rhmiv1alpha1.RHMI, namespace
 		return errors.Wrap(err, "Error checking for Quota secret")
 	}
 
-	//!found means the param wasn't found so we want to default rather than return
-	//if the param is not found after the installation is 1 minute old it means that it wasn't provided to the installation
-	//a quota value is required for the installation to begin, the dev value is provided by the make cluster/prepare/quota for local installs
-	//or as a required value from an ocm add-on installation
-	if !found && !installation.ObjectMeta.CreationTimestamp.Time.Before(time.Now().Add(-(1 * time.Minute))) {
-		return errors.Wrap(err, "no quota value provided, quota is a required parameter for a managed-api install")
+	// if !found or the param is found but empty and installation is less than one minute old, return an error
+	// to stop the installation until either the installation is older than 1 minute or a paramater is found
+	if !found || quotaParam == "" && !installation.ObjectMeta.CreationTimestamp.Time.Before(time.Now().Add(-(1*time.Minute))) {
+		return errors.New("waiting for quota parameter for 1 minute after creation of cr")
 	}
 
-	// get a configmap from the cluster
+	// if the param is not found after the installation is 1 minute old it means that it wasn't provided to the installation
+	// in this case check for an Environment Variable QUOTA
+	// if neither are found then return an error as there is no QUOTA value for the installation to use and it's required by the reconcilers.
+	if !found || quotaParam == "" && installation.ObjectMeta.CreationTimestamp.Time.Before(time.Now().Add(-(1*time.Minute))) {
+		log.Info(fmt.Sprintf("No secret param found after one minute so falling back to env var '%s' for sku value", rhmiv1alpha1.EnvKeyQuota))
+		quotaValue, exists := os.LookupEnv(rhmiv1alpha1.EnvKeyQuota)
+		if !exists || quotaValue == "" {
+			return errors.Wrap(err, fmt.Sprintf("no quota value provided by add on parameter '%s' or by env var '%s'", addon.QuotaParamName, rhmiv1alpha1.EnvKeyQuota))
+		}
+		quotaParam = quotaValue
+	}
+
+	// get the quota config map from the cluster
 	cm := &corev1.ConfigMap{}
 	err = r.Get(context.TODO(), types.NamespacedName{Namespace: namespace, Name: quota.ConfigMapName}, cm)
 	if err != nil {
@@ -1130,6 +1140,5 @@ func (r *RHMIReconciler) processQuota(installation *rhmiv1alpha1.RHMI, namespace
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
