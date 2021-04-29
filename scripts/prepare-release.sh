@@ -70,8 +70,8 @@ set_version() {
           "${SED_INLINE[@]}" -E "s/version\s+=\s+\"$PREVIOUS_VERSION\"/version = \"$VERSION\"/g" version/version.go
           ;;
         "managed-api-service")
-          "${SED_INLINE[@]}" -E "s/RHOAM_TAG\s+\?=\s+$PREVIOUS_VERSION/RHOAM_TAG \?= $VERSION/g" Makefile
-          "${SED_INLINE[@]}" -E "s/managedAPIVersion\s+=\s+\"$PREVIOUS_VERSION\"/managedAPIVersion = \"$VERSION\"/g" version/version.go
+          "${SED_INLINE[@]}" -E "s/RHOAM_TAG \?= $PREVIOUS_VERSION/RHOAM_TAG \?= $VERSION/g" Makefile
+          "${SED_INLINE[@]}" -E "s/managedAPIVersion = \"$PREVIOUS_VERSION\"/managedAPIVersion = \"$VERSION\"/g" version/version.go
           ;;
         *)
           echo "No version found for install type : $(OLM_TYPE)"
